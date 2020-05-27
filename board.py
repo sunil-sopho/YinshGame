@@ -126,20 +126,76 @@ class Board(object):
 					self.drawLine(self.positions[i][j],self.positions[ring-y][ring-x])
 
 
-	def drawRing(self,point,playerNum,wid=4):
+	def drawRing(self,point,playerNum,wid=4,size=25):
 		# print(point.y)
 		color = red
 		if playerNum == 1:
 			color = blue
-		pygame.draw.circle(self.gameDisplay,color,(int(point.x),int(point.y)),25,wid)
+		elif playerNum == -1:
+			# black guide
+			color = black
+			size = 15
+			# print("adding guides")
+		pygame.draw.circle(self.gameDisplay,color,(int(point.x),int(point.y)),size,wid)
 
 	def addRing(self,x,y):
 		if self.positions[x][y].piece == 0:
 			self.drawRing(self.positions[x][y],currentPlayer)
+			self.players[currentPlayer].boardRings +=1
+			self.positions[x][y].piece = math.pow(-1,currentPlayer)*2
 			if self.players[currentPlayer].boardRings == self.ring and self.players[1-currentPlayer].boardRings == self.ring:
 				requiredMove = 1
 			switchPlayer()
 			return True
+		else:
+			return False
+
+	def blackGuides(self,x,y,asign,bsign,guide):
+		tokenLine = 0
+		a=asign
+		b=bsign
+		while x+a >=0 and x+a < self.rows and y+b>=0 and y+b < self.rows and abs(self.positions[x+a][y+b].piece)!=2 and self.positions[x+a][y+b].x != -1:
+			if self.positions[x+a][y+b].piece != 0:
+				tokenLine = 1
+				continue
+			else:
+				self.drawRing(self.positions[x+a][y+b],-1,0)
+
+			self.positions[x+a][y+b].piece = guide
+			if tokenLine== 1:
+				break
+			a += asign
+			b += bsign
+
+	def addDot(self,point,player,size=18):
+		color = red
+		if player == 1:
+			color = blue
+		wid = size//2
+		pygame.draw.circle(self.gameDisplay,color,(int(point.x),int(point.y)),size,0)
+
+		stepSize = wid
+		colorGradient = tuple(map(lambda i, j: (i - j)/wid, black, color)) 
+		for i in range(stepSize):
+			# color = black - i*(colorGradient)
+			color = tuple(map(lambda a,b: a-i*b,black,colorGradient))
+			
+			pygame.draw.circle(self.gameDisplay,color,(int(point.x),int(point.y)),size-i,1)
+
+
+	def selectRing(self,x,y):
+		if self.positions[x][y].piece == math.pow(-1,currentPlayer)*2:
+			self.addDot(self.positions[x][y],currentPlayer)
+
+			for i in [-1,0,1]:
+				for j in [-1,0,1]:
+					if i*j == -1 or i==j==0:
+						continue
+					else:
+						self.blackGuides(x,y,i,j,True)
+
+			return True
+			requiredMove = 2
 		else:
 			return False
 
