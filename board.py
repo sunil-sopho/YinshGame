@@ -475,7 +475,7 @@ class Board(object):
 			fpx = self.players[currentPlayer].fiveRow[i][0][0]
 			fpy = self.players[currentPlayer].fiveRow[i][0][1]
 			lpx = self.players[currentPlayer].fiveRow[i][self.seq-1][0]
-			lpy = self.players[currentPlayer].fiveRow[i][self.seq-1][0]
+			lpy = self.players[currentPlayer].fiveRow[i][self.seq-1][1]
 
 			if self.matchPoint(x,y,fpx,fpy) or self.matchPoint(x,y,lpx,lpy):
 				if state == 4:
@@ -502,7 +502,7 @@ class Board(object):
 			fpx = self.players[currentPlayer].fiveRow[i][0][0]
 			fpy = self.players[currentPlayer].fiveRow[i][0][1]
 			lpx = self.players[currentPlayer].fiveRow[i][self.seq-1][0]
-			lpy = self.players[currentPlayer].fiveRow[i][self.seq-1][0]
+			lpy = self.players[currentPlayer].fiveRow[i][self.seq-1][1]
 
 			if (self.matchPoint(stx,sty,fpx,fpy) and self.matchPoint(edx,edy,lpx,lpy)) or (self.matchPoint(stx,sty,lpx,lpy) and self.matchPoint(edx,edy,fpx,fpy)):
 				selectRow = i
@@ -720,31 +720,34 @@ class Board(object):
 		if shell!=0 :
 			dev = position % shell;
 			card = position // shell;
-			
+			print(card,x,y,dev,shell)
 			if card==0:
 				#straight up
-				y=y-shell+dev;
+				y=y+shell;
 				x+=dev;
 			elif card==1:
 				#right
-				x+=shell;
-				y+=dev;
+				# x+=shell;
+				# y+=dev;
+				x+=shell
+				y+=shell-dev
+
 			elif card==2:
 				#right down
 				x=x+shell-dev;
-				y+=shell;
+				y-=dev;
 			elif card==3:
 				#straight down
-				y=y+shell-dev;
-				x-=dev;
+				y-=shell;
+				x-=dev
 			elif card==4:
 				#left
 				x-=shell;
-				y-=dev;
+				y-=shell-dev;
 			else:
 				#left up
-				x=x-shell+dev;
-				y-=shell;
+				x-=shell-dev;
+				y+=dev;
 		return x,y
 
 

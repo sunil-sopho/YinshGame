@@ -19,9 +19,11 @@ board = Board(Size,ring,gameDisplay)
 plays = []
 
 def killPlayers():
-	plays[0].closeChild()
-	plays[1].closeChild()
-
+	global plays
+	for player in plays:
+		player.closeChild()
+	plays = []
+	
 board.plotPoints()
 board.makeBoard()
 # for i in range(8):
@@ -29,10 +31,24 @@ board.makeBoard()
 # board.addRing(4,4)
 # board.addRing(4,5)
 
+pygame.init()
 fl = open("./Logs/log","w")
+fl2 = open("./Logs/log2","w")
 flOld = open("./Logs/oldLog","r")
 
 moves = flOld.readlines()
+movesHex = [] #fl2.readlines()
+
+def gameWin(player):
+	font = pygame.font.Font('freesansbold.ttf', 32) 
+  
+
+	text = font.render('Player '+str(player+1)+" wins", True, green, blue) 
+
+	textRect = text.get_rect()  
+	textRect.center = (300, 20)
+	gameDisplay.blit(text, textRect)  
+
 # draw board only one time
 gameDisplay.blit(board.boardCanvas,(0,0))
 while not crashed:
@@ -42,6 +58,8 @@ while not crashed:
 		if event.type == pygame.KEYDOWN:
 			if event.key == pygame.K_q:
 				crashed = True
+				killPlayers()
+
 			if event.key == pygame.K_r:
 				pygame.display.flip()
 			if event.key == pygame.K_d:
@@ -58,6 +76,20 @@ while not crashed:
 				# auto execution code
 				for move in moves:
 					board.execute(move)
+			if event.key == pygame.K_w:
+				gameWin(1)
+			if event.key == pygame.K_g:
+				if len(movesHex) > 0:
+					move = movesHex.pop(0)
+					print(move)
+					board.executeHex(move)
+					board.drawboard()
+				else:
+					print("moveHex is empty")
+			if event.key == pygame.K_j:
+				for move in movesHex:
+					board.executeHex(move)
+					
 			if event.key == pygame.K_s:
 				plays.append(client("sh","run1.sh",1,5,120,5))
 				plays.append(client("sh","run1.sh",2,5,120,5))
@@ -77,7 +109,11 @@ while not crashed:
 						break
 					else:
 						fl.write(str(mv)+"\n")
+						fl2.write(str(move.strip())+"\n")
 						plays[1-cPlayer].sendData(move)
+				if board.requiredMove == 5:
+					killPlayers()
+					gameWin(cPlayer)
 
 		if event.type == pygame.MOUSEBUTTONUP:
 			
@@ -93,8 +129,8 @@ while not crashed:
 		# pygame.draw.line(gameDisplay, GREEN, (100,200), (300,450),5)
 		# print(event)
 
-	gameDisplay.blit(board.guideCanvas,(0,0))
-	gameDisplay.blit(board.ringCanvas,(0,0))
+	# gameDisplay.blit(board.guideCanvas,(0,0))
+	# gameDisplay.blit(board.ringCanvas,(0,0))
 	pygame.display.update()
 	# gameDisplay.fill(red)
 
@@ -102,6 +138,7 @@ while not crashed:
 
 pygame.quit()
 fl.close()
+fl2.close()
 flOld.close()
 quit()
 
