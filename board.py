@@ -548,9 +548,9 @@ class Board(object):
 					break
 			# print(self.ringLoc[currentPlayer])
 			if currentPlayer == 0:
-				self.ringLoc[currentPlayer][i] = Point(500+self.players[currentPlayer].ringsWon*20,30)
+				self.ringLoc[currentPlayer][i] = Point(500+self.players[currentPlayer].ringsWon*40,30)
 			else:
-				self.ringLoc[currentPlayer][i] = Point(50+self.players[currentPlayer].ringsWon*20,30)
+				self.ringLoc[currentPlayer][i] = Point(50+self.players[currentPlayer].ringsWon*40,30)
 
 			# @sunil add ring won
 
@@ -683,35 +683,35 @@ class Board(object):
 
 	def convertFromHex(self,x,y):
 		i=j=0
-		x -= self.Size-1
-		y -= self.Size-1
+		x -= self.Size
+		y -= self.Size
 		card=dev=shell=0
 		if x==0 and y==0:
 			return i,j
-		elif x>=0 and y < 0:
+		elif x<=y and y > 0 and x>=0:
 			card=0
-			shell=x-y
+			shell=y
 			dev=x
 		elif x>y and y >=0:
 			card=1
 			shell=x
-			dev=y
-		elif x<= y and x>0:
+			dev=x-y
+		elif x > y and y<0 and x >=0:
 			card=2
-			shell=y
-			dev=y-x
-		elif x<=0 and y>0:
+			shell=x-y
+			dev=-y
+		elif x<=0 and x>=y:
 			card=3
-			dev =-x
-			shell=y-x
+			shell=-y
+			dev =shell-x+y
 		elif x<y and y<=0:
 			card=4
-			dev =-y
 			shell=-x
+			dev =shell+y
 		else:
 			card=5
-			shell=-y
-			dev=x-y
+			shell=-x+y
+			dev=y
 		return shell,card*shell+dev
 
 	def convertFromHex2(self,shell,position):
@@ -773,9 +773,18 @@ class Board(object):
 			move = move.split(" ")
 			for i in range(len(move)//3):
 				hexi,hexj = self.convertFromHex2(int(move[i*3+1]),int(move[i*3+2]))
+				p1,p2 = self.convertFromHex(hexi,hexj)
+				if p1 != int(move[i*3+1]) or p2 != int(move[i*3+2]):
+					sys.exit(-1)
+				if debug:
+					print("Point conversion test")
+					print(hexi,hexj)
+					print(p1,p2)
+					print(move[i*3+1],move[i*3+2])
+
 				move[i*3+1] = hexi
 				move[i*3+2] = hexj
-				print(hexi,hexj)
+				
 				mv,val = self.isClickValid(self.positions[int(move[i*3+1])][int(move[i*3+2])])	
 				if not val:
 					sys.stderr.write("Invalid Move : "+str(move[i*3])+" "+str(move[i*3+1])+" "+str(move[i*3+2])+"\n")

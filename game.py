@@ -3,6 +3,7 @@ import math
 from board import Board,Player,Point
 from config import *
 from client import client
+import sys
 Size = 5
 ring = 5
 
@@ -17,6 +18,12 @@ crashed = False
 board = Board(Size,ring,gameDisplay)
 
 plays = []
+
+playerExes = []
+if len(sys.argv) == 2 or len(sys.argv) == 3:
+	playerExes = sys.argv
+	playerExes.pop(0)
+
 
 def killPlayers():
 	global plays
@@ -49,6 +56,9 @@ def gameWin(player):
 	textRect.center = (300, 20)
 	gameDisplay.blit(text, textRect)  
 
+
+againstBot = False
+botPlayer = 1
 # draw board only one time
 gameDisplay.blit(board.boardCanvas,(0,0))
 while not crashed:
@@ -91,9 +101,24 @@ while not crashed:
 					board.executeHex(move)
 					
 			if event.key == pygame.K_s:
-				plays.append(client("sh","run1.sh",1,5,120,5))
-				plays.append(client("sh","run1.sh",2,5,120,5))
-				print(plays)
+				exe1 = exe2 = "run1.sh"
+				if len(playerExes) == 1:
+					exe1 = playerExes[0]
+				elif len(playerExes) ==2:
+					exe1 = playerExes[0]
+					exe2 = playerExes[1]
+
+				plays.append(client("sh",exe1,1,5,120,5))
+				plays.append(client("sh",exe2,2,5,120,5))
+				# print(plays)
+
+			if event.key == pygame.K_i:
+				plays.append(client("sh","run1.sh",botPlayer+1,5,120,5))
+				againstBot = True
+				# while board.requiredMove != 5:
+				# pygame.display.update()
+
+
 			if event.key == pygame.K_d:
 				while board.requiredMove != 5:
 					pygame.display.update()
@@ -119,9 +144,43 @@ while not crashed:
 			
 			pos = pygame.mouse.get_pos()
 			move,val = board.isClickValid(Point(pos[0],pos[1]))
-			if move :
+			if val :
 				print(move)
-				print(type(move))
+				# print(type(move))
+				if againstBot:
+					nmove = ""
+					move = move.split(" ")
+					for i in range(len(move)):
+						if i%3==0:
+							nmove += move[i] + " "
+						elif i%3== 1:
+							a,b = board.convertFromHex(int(move[i]),int(move[i+1]))
+							nmove += str(a)+" "+ str(b)+" "
+					nmove = nmove.strip()
+					print(nmove)
+					plays[0].sendData(nmove)
+					pygame.display.update()
+
+
+	cPlayer = board.getCurrentPlayer()
+	if cPlayer == botPlayer and againstBot:
+		move = plays[0].recieveData()
+		move = move.decode()
+		print("Player ",cPlayer," played :",move)
+		mv,val = board.executeHex(move)
+		if not val:
+			print("Wrong move by :",cPlayer,' : ',move)
+			# sys.exit(-1)
+			killPlayers()
+			break
+		else:
+			fl.write(str(mv)+"\n")
+			fl2.write(str(move.strip())+"\n")
+			# plays[1-cPlayer].sendData(move)
+			 
+	if board.requiredMove == 5:
+		killPlayers()
+		gameWin(cPlayer)
 				# fl.write(move)
 			# print(pos," mouse click")
 		# pygame.draw.lines(gameDisplay, GREEN, True, [[0, 80], [50, 90], [200, 80], [220, 30]], 3)

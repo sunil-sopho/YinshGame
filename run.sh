@@ -1,1 +1,1 @@
-python game.py
+python game.py $1 $2
