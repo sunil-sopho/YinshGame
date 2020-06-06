@@ -75,8 +75,8 @@ class Board(object):
 
 		self.gameDisplay.blit(self.boardCanvas, (0,0))
 		self.gameDisplay.blit(self.ringCanvas, (0,0))
-		self.gameDisplay.blit(self.guideCanvas, (0,0))
 		self.gameDisplay.blit(self.dotCanvas, (0,0))
+		self.gameDisplay.blit(self.guideCanvas, (0,0))
 
 	def clearGuideSurface(self):
 		self.guideCanvas = pygame.Surface((display_size[self.Size], display_size[self.Size]), pygame.SRCALPHA, 32)
@@ -222,7 +222,7 @@ class Board(object):
 			a += asign
 			b += bsign
 
-	def addDot(self,point,player,size=20):
+	def addDot(self,point,player,size=18):
 		"""
 		player -1 : black dot marks when 5/seq in row
 				0 : red
@@ -234,8 +234,10 @@ class Board(object):
 			color = blue
 		if player == -1:
 			color = black
-			size = 16
+			size = 20
 			canvas = self.guideCanvas
+			pygame.draw.circle(canvas,color,(int(point.x),int(point.y)),size,0)
+			return
 		wid = size//2
 		pygame.draw.circle(canvas,color,(int(point.x),int(point.y)),size,0)
 
@@ -356,7 +358,7 @@ class Board(object):
 
 				isRow = True
 				for k in range(1,self.seq):
-					if self.positions[i][j].piece != self.positions[i+k][j].piece or self.positions[i][j].x == -1 or j+k >= self.rows:
+					if self.positions[i][j].piece != self.positions[i+k][j].piece or self.positions[i+k][j].x == -1 or i+k >= self.rows:
 						isRow = False
 						break
 
@@ -411,7 +413,7 @@ class Board(object):
 				for j in range(self.seq):
 					xindex = self.players[currentPlayer].fiveRow[i][j][0]
 					yindex = self.players[currentPlayer].fiveRow[i][j][1]
-
+					# print("adding dot")
 					self.addDot(self.positions[xindex][yindex],-1)
 
 			self.requiredMove = state
@@ -556,9 +558,10 @@ class Board(object):
 
 			self.positions[x][y].piece = 0
 
+			print("state in removeRing : ",state)
 			if self.players[currentPlayer].ringsWon == 3:
 				self.requiredMove = 5
-				switchPlayer()
+				# switchPlayer()
 
 			elif len(self.players[currentPlayer].fiveRow) == 0:
 				if state != 7:
@@ -567,10 +570,13 @@ class Board(object):
 				if len(self.players[currentPlayer].fiveRow) == 0 :
 					self.requiredMove = 1
 				else:
-					highlightRow(6)
+					self.highlightRow(6)
 
 			else:
-				highlightRow()
+				if state != 7:
+					self.highlightRow()
+				else:
+					self.highlightRow(6)
 
 			return True
 		else:
@@ -649,7 +655,7 @@ class Board(object):
 						move = "RS "+str(self.strx)+" "+str(self.stry)+" RE "+str(i)+" "+str(j)+" "                    	
 
 					elif self.requiredMove == 7:
-						valid = self.removeRing(i,j)
+						valid = self.removeRing(i,j,7)
 						move = "X "+str(i)+" "+str(j)+" "
 
 					if valid:
@@ -757,8 +763,16 @@ class Board(object):
 				if self.positions[i][j].x == -1:
 					print("x",end=' ')
 				else:
-					if self.positions[i][j].piece != 0:
-						print("1",end=" ",)
+					if self.positions[i][j].piece == 0:
+						print("0",end=" ",)
+					elif self.positions[i][j].piece == 1:
+						print("_",end=" ",)
+					elif self.positions[i][j].piece == -1:
+						print("|",end=" ",)
+					elif self.positions[i][j].piece == 2:
+						print("=",end=" ",)
+					elif self.positions[i][j].piece == -2:
+						print("/",end=" ",)
 					else:
 						print(self.positions[i][j].piece,end=' ')
 			print()
@@ -786,6 +800,10 @@ class Board(object):
 				move[i*3+2] = hexj
 				
 				mv,val = self.isClickValid(self.positions[int(move[i*3+1])][int(move[i*3+2])])	
+				if debug:
+					print("Five in row of player 0 : ",self.players[0].fiveRow )
+					print("Five in row of player 1 : ",self.players[1].fiveRow )
+				# self.drawboard()
 				if not val:
 					sys.stderr.write("Invalid Move : "+str(move[i*3])+" "+str(move[i*3+1])+" "+str(move[i*3+2])+"\n")
 					# sys.exit(-1)
